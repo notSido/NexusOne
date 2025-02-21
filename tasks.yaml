@@ -1,0 +1,11 @@
+tasks:
+  - method: create_wireguard_tunnel
+    data:
+      enabled: true
+      listenport: "51820"
+      privatekey: "SJS2qokW9AlY5P6aTIGBX39zbrshqfHovlffW5qcikk="
+      mtu: 1420
+      addresses:
+        - address: "192.168.1.1"
+          mask: 128
+          descr: "Test Tunnel Address"

@@ -1,0 +1,2 @@
+tasks:
+  - method: apply_pending_wireguard_changes
