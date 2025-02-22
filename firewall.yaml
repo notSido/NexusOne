@@ -1,0 +1,34 @@
+tasks:
+  - method: create_firewall_rule
+    data:
+      type: "pass"
+      interface:
+        - "wan"  # Replace with your actual interface (e.g., lan, opt1)
+      ipprotocol: "inet"
+      protocol: "tcp"
+      icmptype:
+        - "any"
+      source: "wan_net"
+      source_port: "443"
+      destination: "lan_net"
+      destination_port: "80"
+      descr: "Allow HTTP traffic from 192.168.1.100 to 10.10.10.1"
+      disabled: false  # Set to true to disable the rule
+      log: true
+      tag: "web_traffic"
+      statetype: "keep state"
+      tcp_flags_any: true
+      tcp_flags_out_of:
+        - "fin"
+      tcp_flags_set:
+        - "fin"
+      gateway: "default"
+      sched: ""
+      dnpipe: ""
+      pdnpipe: ""
+      defaultqueue: ""
+      ackqueue: ""
+      floating: false
+      quick: true
+      direction: "in"
+  - method: apply_pending_firewall_changes

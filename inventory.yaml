@@ -1,3 +1,2 @@
-api_url: "https://10.22.22.117"
-username: "admin"
-password: "letmein1"
+api_url: "https://10.10.10.1"
+api_key: "{{ PFSENSE_API_KEY }}"

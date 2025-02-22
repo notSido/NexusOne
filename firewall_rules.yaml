@@ -1,0 +1,3 @@
+tasks:
+  - name: get all firewall rules
+  

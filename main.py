@@ -1,6 +1,9 @@
 import argparse
 import yaml
-from endpoints import wireguard
+import importlib
+
+# List of module names containing your methods
+ENDPOINT_MODULES = ["endpoints.wireguard", "endpoints.firewall"]  # Add more modules as needed
 
 def load_yaml_file(file_path):
     """Generic function to load YAML from a file."""
@@ -21,34 +24,40 @@ def main():
     tasks = tasks_config.get('tasks', [])
 
     api_url = inventory.get('api_url')
-    username = inventory.get('username')
-    password = inventory.get('password')
+    if not api_url:
+        raise Exception('No API URL provided, quitting!')
 
-    if not (api_url and username and password):
-        print("Error: Inventory file must include api_url, username, and password.")
-        return
+    # Initialize headers
+    headers = None
 
-    auth = (username, password)
+    # Determine authentication method
+    if inventory.get('username') and inventory.get('password'):
+        auth = (inventory.get('username'), inventory.get('password'))
+    elif inventory.get('api_key'):
+        auth = None
+        headers = {'x-api-key': inventory.get('api_key')}
+    else:
+        raise Exception('No valid auth methods provided in the inventory file, quitting!')
 
-    # Create a dispatch dictionary mapping method names to functions.
-    # You can expand this dictionary as you add more endpoints.
-    dispatch = dict(get_wireguard_tunnel=wireguard.get_wireguard_tunnel,
-                    create_wireguard_tunnel=wireguard.create_wireguard_tunnel,
-                    update_wireguard_tunnel=wireguard.update_wireguard_tunnel,
-                    delete_wireguard_tunnel=wireguard.delete_wireguard_tunnel,
-                    apply_pending_wireguard_changes=wireguard.apply_pending_wireguard_changes)
+    # Dynamically load all available methods from the modules
+    methods = {}
+    for module_name in ENDPOINT_MODULES:
+        module = importlib.import_module(module_name)
+        for method_name in dir(module):
+            if not method_name.startswith("_"):  # Ignore private/internal methods
+                methods[method_name] = getattr(module, method_name)
 
     # Process each task defined in the tasks YAML file
     for task in tasks:
         method_name = task.get('method')
-        func = dispatch.get(method_name)
+        func = methods.get(method_name)
         if func:
-            # Merge authentication and any other required parameters into kwargs.
-            # This approach allows each function to extract what it needs from kwargs.
             task['auth'] = auth
+            task['headers'] = headers if headers else {}
             result = func(api_url, **task)
         else:
             result = {"error": f"Unknown method: {method_name}"}
+        
         print(f"Result for task '{method_name}':")
         print(result)
 
